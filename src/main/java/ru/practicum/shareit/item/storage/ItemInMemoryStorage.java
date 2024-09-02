@@ -6,7 +6,6 @@ import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 
 @Log4j2
