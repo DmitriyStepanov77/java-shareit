@@ -2,7 +2,7 @@ package ru.practicum.shareit.item.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exeception.model.NotFoundExeception;
+import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.mapper.ItemDtoMapper;
 import ru.practicum.shareit.item.model.Item;
@@ -59,7 +59,7 @@ public class ItemServiceImp implements ItemService {
 
     @Override
     public List<ItemDto> search(String text) {
-        if (text.isEmpty())
+        if (text == null || text.isEmpty())
             return new ArrayList<>();
         return itemStorage.getItems().stream()
                 .filter(item -> item.getAvailable() != null && item.getAvailable() &&
@@ -71,6 +71,6 @@ public class ItemServiceImp implements ItemService {
 
     private void validateOwner(int userId, Item item) {
         if (item.getOwner() != userId)
-            throw new NotFoundExeception("Owner is incorrect.");
+            throw new NotFoundException("Owner is incorrect.");
     }
 }

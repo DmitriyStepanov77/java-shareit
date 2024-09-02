@@ -2,7 +2,7 @@ package ru.practicum.shareit.user.storage;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Component;
-import ru.practicum.shareit.exeception.model.NotFoundExeception;
+import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.user.model.User;
 
 import java.util.Collection;
@@ -34,7 +34,7 @@ public class UserInMemoryStorage implements UserStorage {
         if (users.containsKey(id))
             return users.get(id);
         else
-            throw new NotFoundExeception("Error: user is not found.");
+            throw new NotFoundException("Error: user is not found.");
     }
 
     @Override

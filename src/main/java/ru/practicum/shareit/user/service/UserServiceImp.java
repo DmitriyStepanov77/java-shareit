@@ -5,7 +5,7 @@ import jakarta.validation.ValidationException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exeception.model.ConflictExeception;
+import ru.practicum.shareit.exception.model.ConflictException;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.mapper.UserDtoMapper;
 import ru.practicum.shareit.user.model.User;
@@ -45,11 +45,11 @@ public class UserServiceImp implements UserService {
     }
 
     private void validationUser(User user) {
-        if (user.getEmail().isEmpty())
+        if (user.getEmail() == null || user.getEmail().isEmpty())
             throw new ValidationException("Email is empty.");
         if (userStorage.getUsers().stream()
                 .anyMatch(u -> (u.getEmail().equals(user.getEmail()) && u.getId() != user.getId())))
-            throw new ConflictExeception("Email already exists");
+            throw new ConflictException("Email already exists");
     }
 
 }

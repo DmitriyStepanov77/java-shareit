@@ -2,9 +2,11 @@ package ru.practicum.shareit.item.storage;
 
 import lombok.extern.log4j.Log4j2;
 import org.springframework.stereotype.Repository;
+import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.model.Item;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
 @Log4j2
@@ -30,7 +32,10 @@ public class ItemInMemoryStorage implements ItemStorage {
 
     @Override
     public Item getItem(int id) {
-        return items.get(id);
+        if (items.containsKey(id))
+            return items.get(id);
+        else
+            throw new NotFoundException("Error: item is not found.");
     }
 
     @Override
@@ -45,6 +50,6 @@ public class ItemInMemoryStorage implements ItemStorage {
     }
 
     private Integer getId() {
-        return id++;
+        return ++id;
     }
 }
