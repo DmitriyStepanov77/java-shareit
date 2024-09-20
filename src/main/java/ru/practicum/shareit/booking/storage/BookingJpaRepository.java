@@ -16,67 +16,67 @@ public interface BookingJpaRepository extends JpaRepository<Booking, Integer> {
     /**
      * Поиск бронирований пользователя.
      *
-     * @param booker_id Идентификатор пользователя.
+     * @param bookerId Идентификатор пользователя.
      * @return список объектов, содержащий данные о бронированиях.
      */
-    public List<Booking> findByBookerIdOrderByStartDesc(int booker_id);
+    public List<Booking> findByBookerIdOrderByStartDesc(int bookerId);
 
     /**
      * Поиск текущих бронирований пользователя.
      *
-     * @param booker_id Идентификатор пользователя.
+     * @param bookerId Идентификатор пользователя.
      * @param start     Текущее время.
      * @param end       Текущее время.
      * @return список объектов, содержащий данные о бронированиях.
      */
-    public List<Booking> findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(int booker_id,
+    public List<Booking> findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(int bookerId,
                                                                                  LocalDateTime start,
                                                                                  LocalDateTime end);
 
     /**
      * Поиск бронирований пользователя, окончившихся ранее заданного времени.
      *
-     * @param booker_id Идентификатор пользователя.
+     * @param bookerId Идентификатор пользователя.
      * @param time      Время, до которого нужно найти закончившиеся бронирования.
      * @return список объектов, содержащий данные о бронированиях.
      */
-    public List<Booking> findByBookerIdAndEndBeforeOrderByStartDesc(int booker_id,
+    public List<Booking> findByBookerIdAndEndBeforeOrderByStartDesc(int bookerId,
                                                                     LocalDateTime time);
 
     /**
      * Поиск бронирований пользователя, начавшиеся позже заданного времени.
      *
-     * @param booker_id Идентификатор пользователя.
+     * @param bookerId Идентификатор пользователя.
      * @param time      Время, после которого нужно найти начавшиеся бронирования.
      * @return список объектов, содержащий данные о бронированиях.
      */
-    public List<Booking> findByBookerIdAndStartAfterOrderByStartDesc(int booker_id,
+    public List<Booking> findByBookerIdAndStartAfterOrderByStartDesc(int bookerId,
                                                                      LocalDateTime time);
 
     /**
      * Поиск бронирований пользователя с заданным статусом.
      *
-     * @param booker_id Идентификатор пользователя.
+     * @param bookerId Идентификатор пользователя.
      * @param status    Статус бронирования.
      * @return список объектов, содержащий данные о бронированиях.
      */
-    public List<Booking> findByBookerIdAndStatusLikeOrderByStartDesc(int booker_id, BookingStatus status);
+    public List<Booking> findByBookerIdAndStatusLikeOrderByStartDesc(int bookerId, BookingStatus status);
 
     /**
      * Поиск бронирований вещей владельца.
      *
-     * @param owner_id Идентификатор владельца.
+     * @param ownerId Идентификатор владельца.
      * @return список объектов, содержащий данные о бронированиях.
      */
     @Query(" select b from Booking b " +
             "where b.item.owner.id = ?1" +
             " order by b.start desc")
-    public List<Booking> findByOwnerIdAll(int owner_id);
+    public List<Booking> findByOwnerIdAll(int ownerId);
 
     /**
      * Поиск текущих бронирований вещей владельца.
      *
-     * @param owner_id Идентификатор владельца.
+     * @param ownerId Идентификатор владельца.
      * @param time     Текущее время.
      * @return список объектов, содержащий данные о бронированиях.
      */
@@ -84,12 +84,12 @@ public interface BookingJpaRepository extends JpaRepository<Booking, Integer> {
             "where b.item.owner.id = ?1 AND " +
             " b.start < ?2 AND  b.end > ?2" +
             " order by b.start desc")
-    public List<Booking> findByOwnerIdCurrent(int owner_id, LocalDateTime time);
+    public List<Booking> findByOwnerIdCurrent(int ownerId, LocalDateTime time);
 
     /**
      * Поиск бронирований вещей владельца, окончившихся ранее заданного времени.
      *
-     * @param owner_id Идентификатор владельца.
+     * @param ownerId Идентификатор владельца.
      * @param time     Время, до которого нужно найти закончившиеся бронирования.
      * @return список объектов, содержащий данные о бронированиях.
      */
@@ -97,12 +97,12 @@ public interface BookingJpaRepository extends JpaRepository<Booking, Integer> {
             "where b.item.owner.id = ?1 AND " +
             "b.end < ?2" +
             " order by b.start desc")
-    public List<Booking> findByOwnerIdPast(int owner_id, LocalDateTime time);
+    public List<Booking> findByOwnerIdPast(int ownerId, LocalDateTime time);
 
     /**
      * Поиск бронирований вещей владельца, начавшиеся позже заданного времени.
      *
-     * @param owner_id Идентификатор владельца.
+     * @param ownerId Идентификатор владельца.
      * @param time     Время, после которого нужно найти начавшиеся бронирования.
      * @return список объектов, содержащий данные о бронированиях.
      */
@@ -110,12 +110,12 @@ public interface BookingJpaRepository extends JpaRepository<Booking, Integer> {
             "where b.item.owner.id = ?1 AND " +
             "b.start > ?2" +
             " order by b.start desc")
-    public List<Booking> findByOwnerIdFuture(int owner_id, LocalDateTime time);
+    public List<Booking> findByOwnerIdFuture(int ownerId, LocalDateTime time);
 
     /**
      * Поиск бронирований вещей владельца с заданным статусом.
      *
-     * @param owner_id Идентификатор владельца.
+     * @param ownerId Идентификатор владельца.
      * @param status   Статус бронирования.
      * @return список объектов, содержащий данные о бронированиях.
      */
@@ -123,32 +123,32 @@ public interface BookingJpaRepository extends JpaRepository<Booking, Integer> {
             "where b.item.owner.id = ?1 AND " +
             "b.status = ?2" +
             " order by b.start desc")
-    public List<Booking> findByOwnerIdStatus(int owner_id, BookingStatus status);
+    public List<Booking> findByOwnerIdStatus(int ownerId, BookingStatus status);
 
     /**
      * Поиск бронирований для списка вещей.
      *
-     * @param item_id Список идентификаторов вещей.
+     * @param itemId Список идентификаторов вещей.
      * @return список объектов, содержащий данные о бронированиях.
      */
-    public List<Booking> findByItemIdIn(Collection<Integer> item_id);
+    public List<Booking> findByItemIdIn(Collection<Integer> itemId);
 
     /**
      * Поиск бронирований для вещи.
      *
-     * @param item_id Идентификатор вещи.
+     * @param itemId Идентификатор вещи.
      * @return список объектов, содержащий данные о бронированиях.
      */
-    public List<Booking> findByItemId(int item_id);
+    public List<Booking> findByItemId(int itemId);
 
     /**
      * Поиск бронирований пользователя для вещи.
      *
-     * @param item_id   Идентификатор вещи.
-     * @param booker_id Идентификатор пользователя.
+     * @param itemId   Идентификатор вещи.
+     * @param bookerId Идентификатор пользователя.
      * @param end       Время окончания аренды.
      * @return список объектов, содержащий данные о бронированиях.
      */
-    public List<Booking> findByItemIdAndBookerIdAndEndBefore(int item_id, int booker_id, LocalDateTime end);
+    public List<Booking> findByItemIdAndBookerIdAndEndBefore(int itemId, int bookerId, LocalDateTime end);
 
 }

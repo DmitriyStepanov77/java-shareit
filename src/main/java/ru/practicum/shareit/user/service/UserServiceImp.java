@@ -8,8 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.model.ConflictException;
 import ru.practicum.shareit.exception.model.NotFoundException;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.mapper.UserDtoMapper;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserJpaRepository;
 
@@ -25,6 +23,12 @@ public class UserServiceImp implements UserService {
         this.userStorage = userStorage;
     }
 
+    /**
+     * Добавление нового пользователя.
+     *
+     * @param user объект, содержащий данные о пользователе.
+     * @return объект, содержащий данные о созданном пользователе.
+     */
     @Override
     @Transactional
     public User addUser(User user) {
@@ -34,24 +38,44 @@ public class UserServiceImp implements UserService {
         return userSaved;
     }
 
+    /**
+     * Обновление пользователя.
+     *
+     * @param userId Идентификатор пользователя.
+     * @param user   объект, содержащий данные о пользователе.
+     * @return объект, содержащий данные об обновленном пользователе.
+     * @throws NotFoundException если пользователь не найден.
+     */
     @Override
     @Transactional
-    public User updateUser(int id, User user) {
-        User updateUser = userStorage.findById(id).orElseThrow(() -> new NotFoundException("Error: user is not found."));
+    public User updateUser(int userId, User user) {
+        User updateUser = userStorage.findById(userId).orElseThrow(() -> new NotFoundException("Error: user is not found."));
         if (user.getName() != null)
             updateUser.setName(user.getName());
         if (user.getEmail() != null)
             updateUser.setEmail(user.getEmail());
         validationUser(updateUser);
-        log.info("Update user: id = {}, name = {}.", user.getId(), user.getName());
+        log.info("Update user: userId = {}, name = {}.", user.getId(), user.getName());
         return userStorage.save(updateUser);
     }
 
+    /**
+     * Получение пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     * @return объект, содержащий данные о пользователе.
+     * @throws NotFoundException если пользователь не найден.
+     */
     @Override
     public User getUser(int id) {
         return userStorage.findById(id).orElseThrow(() -> new NotFoundException("Error: user is not found."));
     }
 
+    /**
+     * Удаление пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     */
     @Override
     @Transactional
     public void deleteUser(int id) {

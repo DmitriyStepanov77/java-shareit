@@ -12,9 +12,9 @@ public interface CommentJpaRepository extends JpaRepository<Comment, Integer> {
     /**
      * Поиск комментариев к вещи.
      *
-     * @param item_id Идентификатор вещи.
+     * @param itemId Идентификатор вещи.
      * @return список объектов, содержащий данные о комментариях.
      */
-    public List<Comment> findByItemId(int item_id);
+    public List<Comment> findByItemId(int itemId);
 
 }
