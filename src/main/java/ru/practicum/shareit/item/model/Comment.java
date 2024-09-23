@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private Integer id;
     private String text;
     @ManyToOne
     @JoinColumn(name = "item_id")

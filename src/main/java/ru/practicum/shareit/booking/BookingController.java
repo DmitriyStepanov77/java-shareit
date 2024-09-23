@@ -68,9 +68,9 @@ public class BookingController {
      * @return список DTO объектов, содержащий данные о бронированиях.
      */
     @GetMapping()
-    public List<BookingDtoOut> getBookingByBooker(@RequestHeader("X-Sharer-User-Id") int userId,
+    public List<BookingDtoOut> getBookingsByUser(@RequestHeader("X-Sharer-User-Id") int userId,
                                                   @RequestParam(defaultValue = "ALL") String state) {
-        return bookingService.getBookingsByBooker(userId, state).stream()
+        return bookingService.getBookingsByUser(userId, state).stream()
                 .map(BookingDtoMapper::mapToBookingDtoOut)
                 .toList();
     }

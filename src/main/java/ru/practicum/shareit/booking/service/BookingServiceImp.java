@@ -108,7 +108,7 @@ public class BookingServiceImp implements BookingService {
      * @throws NotFoundException если статус некорректен.
      */
     @Override
-    public List<Booking> getBookingsByBooker(int bookerId, String state) {
+    public List<Booking> getBookingsByUser(int bookerId, String state) {
         userService.getUser(bookerId);
         LocalDateTime currentTime = LocalDateTime.now();
         return switch (state) {
