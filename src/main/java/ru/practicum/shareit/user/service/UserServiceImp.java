@@ -11,6 +11,8 @@ import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.storage.UserJpaRepository;
 
+import java.util.Objects;
+
 @Log4j2
 @Service
 @Transactional(readOnly = true)
@@ -87,7 +89,7 @@ public class UserServiceImp implements UserService {
         if (user.getEmail() == null || user.getEmail().isEmpty())
             throw new ValidationException("Email is empty.");
         if (userStorage.findAll().stream()
-                .anyMatch(u -> (u.getEmail().equals(user.getEmail()) && u.getId() != user.getId())))
+                .anyMatch(u -> (u.getEmail().equals(user.getEmail()) && !Objects.equals(u.getId(), user.getId()))))
             throw new ConflictException("Email already exists");
     }
 
