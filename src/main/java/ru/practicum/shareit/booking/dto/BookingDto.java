@@ -1,7 +1,7 @@
 package ru.practicum.shareit.booking.dto;
 
+import jakarta.validation.constraints.*;
 import lombok.Data;
-import ru.practicum.shareit.booking.model.EnumStatus;
 
 import java.time.LocalDateTime;
 
@@ -10,10 +10,12 @@ import java.time.LocalDateTime;
  */
 @Data
 public class BookingDto {
-    private int id;
+    @NotNull
+    @FutureOrPresent()
     private LocalDateTime start;
+    @NotNull
+    @Future
     private LocalDateTime end;
-    private int item;
-    private int booker;
-    private EnumStatus status;
+    @NotNull
+    private int itemId;
 }

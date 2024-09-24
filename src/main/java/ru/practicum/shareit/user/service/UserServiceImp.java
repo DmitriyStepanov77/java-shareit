@@ -5,50 +5,91 @@ import jakarta.validation.ValidationException;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.practicum.shareit.exception.model.ConflictException;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.mapper.UserDtoMapper;
+import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.user.model.User;
-import ru.practicum.shareit.user.storage.UserStorage;
+import ru.practicum.shareit.user.storage.UserJpaRepository;
+
+import java.util.Objects;
 
 @Log4j2
 @Service
+@Transactional(readOnly = true)
 public class UserServiceImp implements UserService {
-    @Autowired
-    private UserStorage userStorage;
 
-    @Override
-    public UserDto addUser(User user) {
-        validationUser(user);
-        return UserDtoMapper.mapToUserDto(userStorage.addUser(user));
+    private final UserJpaRepository userStorage;
+
+    @Autowired
+    public UserServiceImp(UserJpaRepository userStorage) {
+        this.userStorage = userStorage;
     }
 
+    /**
+     * Добавление нового пользователя.
+     *
+     * @param user объект, содержащий данные о пользователе.
+     * @return объект, содержащий данные о созданном пользователе.
+     */
     @Override
-    public UserDto updateUser(int id, User user) {
-        User updateUser = userStorage.getUser(id);
+    @Transactional
+    public User addUser(User user) {
+        validationUser(user);
+        User userSaved = userStorage.save(user);
+        log.info("Adding user: id = {}, name = {}.", userSaved.getId(), userSaved.getName());
+        return userSaved;
+    }
+
+    /**
+     * Обновление пользователя.
+     *
+     * @param userId Идентификатор пользователя.
+     * @param user   объект, содержащий данные о пользователе.
+     * @return объект, содержащий данные об обновленном пользователе.
+     * @throws NotFoundException если пользователь не найден.
+     */
+    @Override
+    @Transactional
+    public User updateUser(int userId, User user) {
+        User updateUser = userStorage.findById(userId).orElseThrow(() -> new NotFoundException("Error: user is not found."));
         if (user.getName() != null)
             updateUser.setName(user.getName());
         if (user.getEmail() != null)
             updateUser.setEmail(user.getEmail());
         validationUser(updateUser);
-        return UserDtoMapper.mapToUserDto(userStorage.updateUser(updateUser));
+        log.info("Update user: userId = {}, name = {}.", user.getId(), user.getName());
+        return userStorage.save(updateUser);
     }
 
+    /**
+     * Получение пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     * @return объект, содержащий данные о пользователе.
+     * @throws NotFoundException если пользователь не найден.
+     */
     @Override
-    public UserDto getUser(int id) {
-        return UserDtoMapper.mapToUserDto(userStorage.getUser(id));
+    public User getUser(int id) {
+        return userStorage.findById(id).orElseThrow(() -> new NotFoundException("Error: user is not found."));
     }
 
+    /**
+     * Удаление пользователя.
+     *
+     * @param id Идентификатор пользователя.
+     */
     @Override
+    @Transactional
     public void deleteUser(int id) {
-        userStorage.deleteUser(id);
+        log.info("Delete user: id = {}.", id);
+        userStorage.deleteById(id);
     }
 
     private void validationUser(User user) {
         if (user.getEmail() == null || user.getEmail().isEmpty())
             throw new ValidationException("Email is empty.");
-        if (userStorage.getUsers().stream()
-                .anyMatch(u -> (u.getEmail().equals(user.getEmail()) && u.getId() != user.getId())))
+        if (userStorage.findAll().stream()
+                .anyMatch(u -> (u.getEmail().equals(user.getEmail()) && !Objects.equals(u.getId(), user.getId()))))
             throw new ConflictException("Email already exists");
     }
 

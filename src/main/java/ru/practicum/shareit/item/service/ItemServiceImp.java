@@ -1,35 +1,79 @@
 package ru.practicum.shareit.item.service;
 
+import jakarta.validation.ValidationException;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.BookingStatus;
+import ru.practicum.shareit.booking.storage.BookingJpaRepository;
 import ru.practicum.shareit.exception.model.NotFoundException;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.ItemDtoOut;
+import ru.practicum.shareit.item.mapper.CommentDtoMapper;
 import ru.practicum.shareit.item.mapper.ItemDtoMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.item.storage.ItemStorage;
+import ru.practicum.shareit.item.storage.CommentJpaRepository;
+import ru.practicum.shareit.item.storage.ItemJpaRepository;
 import ru.practicum.shareit.user.service.UserService;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+@Log4j2
 @Service
+@Transactional(readOnly = true)
 public class ItemServiceImp implements ItemService {
-    @Autowired
-    private ItemStorage itemStorage;
-    @Autowired
-    private UserService userService;
 
-    @Override
-    public ItemDto addItem(int userId, Item item) {
-        userService.getUser(userId);
-        item.setOwner(userId);
-        return ItemDtoMapper.mapToItemDto(itemStorage.addItem(item));
+    private final ItemJpaRepository itemStorage;
+    private final UserService userService;
+    private final BookingJpaRepository bookingStorage;
+    private final CommentJpaRepository commentStorage;
+
+    @Autowired
+    public ItemServiceImp(ItemJpaRepository itemStorage, UserService userService, BookingJpaRepository bookingStorage, CommentJpaRepository commentStorage) {
+        this.itemStorage = itemStorage;
+        this.userService = userService;
+        this.bookingStorage = bookingStorage;
+        this.commentStorage = commentStorage;
     }
 
+    /**
+     * Добавление новой вещи.
+     *
+     * @param userId Идентификатор владельца вещи.
+     * @param item   объект, содержащий данные о вещи.
+     * @return объект, содержащий данные о созданной вещи.
+     */
     @Override
-    public ItemDto updateItem(int userId, int itemId, Item item) {
-        Item updateItem = itemStorage.getItem(itemId);
+    @Transactional
+    public Item addItem(int userId, Item item) {
+        userService.getUser(userId);
+        item.setOwner(userService.getUser(userId));
+        Item itemSaved = itemStorage.save(item);
+        log.info("Added item: id = {}, owner = {}.", itemSaved.getId(), itemSaved.getOwner().getId());
+        return itemStorage.save(item);
+    }
+
+    /**
+     * Обновление вещи.
+     *
+     * @param userId Идентификатор владельца вещи.
+     * @param itemId Идентификатор вещи.
+     * @param item   объект, содержащий данные о вещи.
+     * @return объект, содержащий данные об обновленной вещи.
+     * @throws NotFoundException если вещь не найдена.
+     */
+    @Override
+    @Transactional
+    public Item updateItem(int userId, int itemId, Item item) {
+        Item updateItem = itemStorage.findById(itemId)
+                .orElseThrow(() -> new NotFoundException("Error: item " + itemId + " is not found."));
         userService.getUser(userId);
         validateOwner(userId, updateItem);
         if (item.getName() != null)
@@ -38,39 +82,123 @@ public class ItemServiceImp implements ItemService {
             updateItem.setDescription(item.getDescription());
         if (item.getAvailable() != null)
             updateItem.setAvailable(item.getAvailable());
-        return ItemDtoMapper.mapToItemDto(itemStorage.updateItem(updateItem));
+        log.info("Update item: id = {}, owner = {}.", itemId, userId);
+        return itemStorage.save(updateItem);
     }
 
+    /**
+     * Получение вещи.
+     *
+     * @param id Идентификатор вещи.
+     * @return объект, содержащий данные о вещи.
+     * @throws NotFoundException если вещь не найдена.
+     */
     @Override
-    public ItemDto getItem(int userId, int id) {
-        Item item = itemStorage.getItem(id);
-        validateOwner(userId, item);
-        return ItemDtoMapper.mapToItemDto(item);
+    public ItemDtoOut getItem(int id) {
+        List<Booking> itemsBookings = bookingStorage.findByItemId(id);
+        Item item = itemStorage.findById(id)
+                .orElseThrow(() -> new NotFoundException("Error: item " + id + " is not found."));
+        return ItemDtoMapper.mapToItemDtoWithBookingTime(item,
+                lastBookingTime(itemsBookings),
+                nextBookingTime(itemsBookings),
+                commentStorage.findByItemId(item.getId()).stream()
+                        .map(CommentDtoMapper::mapToCommentDto)
+                        .toList());
     }
 
-
+    /**
+     * Получение всех вещей пользователя.
+     *
+     * @param userId Идентификатор пользователя.
+     * @return список объектов, содержащих данные о вещах.
+     */
     @Override
-    public List<ItemDto> getItems(int userId) {
-        return itemStorage.getItems().stream()
-                .filter(item -> item.getOwner() == userId)
-                .map(ItemDtoMapper::mapToItemDto)
-                .collect(Collectors.toList());
+    public List<ItemDtoOut> getItems(int userId) {
+        List<Item> items = itemStorage.findByOwnerId(userId);
+        List<Integer> itemsId = items.stream().map(Item::getId).toList();
+        Map<Integer, List<Booking>> itemsBookings = bookingStorage.findByItemIdIn(itemsId).stream()
+                .collect(Collectors.groupingBy(booking -> booking.getItem().getId(), Collectors.toList()));
+        return items.stream()
+                .map(item -> ItemDtoMapper.mapToItemDtoWithBookingTime(item,
+                        lastBookingTime(itemsBookings.get(item.getId())),
+                        nextBookingTime(itemsBookings.get(item.getId())),
+                        commentStorage.findByItemId(item.getId()).stream()
+                                .map(CommentDtoMapper::mapToCommentDto)
+                                .toList()))
+                .toList();
     }
 
+    /**
+     * Поиск по всем вещам.
+     *
+     * @param text Текст поиска.
+     * @return список объектов, содержащих данные о вещах.
+     */
     @Override
-    public List<ItemDto> search(String text) {
+    public List<Item> search(String text) {
         if (text == null || text.isEmpty())
             return new ArrayList<>();
-        return itemStorage.getItems().stream()
+        return itemStorage.findAll().stream()
                 .filter(item -> item.getAvailable() != null && item.getAvailable() &&
                         (item.getName().toLowerCase().contains(text.toLowerCase())
                                 || item.getDescription().toLowerCase().contains(text.toLowerCase())))
-                .map(ItemDtoMapper::mapToItemDto)
                 .collect(Collectors.toList());
     }
 
+    /**
+     * Добавление комментария к вещи.
+     *
+     * @param itemId Идентификатор вещи.
+     * @param userId Идентификатор пользователя, который добавляет комментарий.
+     * @param comment Dto объект, содержащий данные о комментарии.
+     * @return объект, содержащих данные о добавленном комментарии.
+     */
+    @Override
+    @Transactional
+    public Comment addComment(int itemId, int userId, CommentDto comment) {
+        validateBooker(itemId, userId);
+        return commentStorage.save(Comment.builder()
+                .text(comment.getText())
+                .item(itemStorage.findById(itemId)
+                        .orElseThrow(() -> new NotFoundException("Error: item " + itemId + " is not found.")))
+                .author(userService.getUser(userId))
+                .created(LocalDateTime.now())
+                .build());
+    }
+
     private void validateOwner(int userId, Item item) {
-        if (item.getOwner() != userId)
+        if (item.getOwner().getId() != userId)
             throw new NotFoundException("Owner is incorrect.");
+    }
+
+    private void validateBooker(int itemId, int userId) {
+        bookingStorage.findByItemIdAndBookerIdAndEndBefore(itemId,
+                        userId,
+                        LocalDateTime.now()).stream()
+                .findFirst().orElseThrow(() -> new ValidationException("Error: booker " + userId + " is not found."));
+    }
+
+    private LocalDateTime lastBookingTime(List<Booking> bookings) {
+        if (bookings == null || bookings.isEmpty()) {
+            return null;
+        }
+        return bookings.stream()
+                .filter(booking -> booking.getStatus() == BookingStatus.CANCELED)
+                .map(Booking::getEnd)
+                .filter(end -> end.isBefore(LocalDateTime.now()))
+                .reduce((t1, t2) -> t1.isAfter(t2) ? t1 : t2)
+                .orElse(null);
+    }
+
+    private LocalDateTime nextBookingTime(List<Booking> bookings) {
+        if (bookings == null || bookings.isEmpty()) {
+            return null;
+        }
+        return bookings.stream()
+                .map(Booking::getStart)
+                .filter(start -> start.isAfter(LocalDateTime.now()))
+                .sorted()
+                .findFirst()
+                .orElse(null);
     }
 }
