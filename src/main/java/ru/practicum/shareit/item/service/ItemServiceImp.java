@@ -10,6 +10,7 @@ import ru.practicum.shareit.booking.model.BookingStatus;
 import ru.practicum.shareit.booking.storage.BookingJpaRepository;
 import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoOut;
 import ru.practicum.shareit.item.mapper.CommentDtoMapper;
 import ru.practicum.shareit.item.mapper.ItemDtoMapper;
@@ -17,6 +18,7 @@ import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.storage.CommentJpaRepository;
 import ru.practicum.shareit.item.storage.ItemJpaRepository;
+import ru.practicum.shareit.request.service.ItemRequestService;
 import ru.practicum.shareit.user.service.UserService;
 
 import java.time.LocalDateTime;
@@ -34,13 +36,16 @@ public class ItemServiceImp implements ItemService {
     private final UserService userService;
     private final BookingJpaRepository bookingStorage;
     private final CommentJpaRepository commentStorage;
+    private final ItemRequestService itemRequestService;
 
     @Autowired
-    public ItemServiceImp(ItemJpaRepository itemStorage, UserService userService, BookingJpaRepository bookingStorage, CommentJpaRepository commentStorage) {
+    public ItemServiceImp(ItemJpaRepository itemStorage, UserService userService, BookingJpaRepository bookingStorage,
+                          CommentJpaRepository commentStorage, ItemRequestService itemRequestService) {
         this.itemStorage = itemStorage;
         this.userService = userService;
         this.bookingStorage = bookingStorage;
         this.commentStorage = commentStorage;
+        this.itemRequestService = itemRequestService;
     }
 
     /**
@@ -52,12 +57,17 @@ public class ItemServiceImp implements ItemService {
      */
     @Override
     @Transactional
-    public Item addItem(int userId, Item item) {
-        userService.getUser(userId);
-        item.setOwner(userService.getUser(userId));
-        Item itemSaved = itemStorage.save(item);
+    public Item addItem(int userId, ItemDto item) {
+        Item newItem = new Item();
+        newItem.setOwner(userService.getUser(userId));
+        newItem.setName(item.getName());
+        newItem.setDescription(item.getDescription());
+        if(item.getRequestId() != 0)
+            newItem.setRequest(itemRequestService.getRequest(item.getRequestId()));
+        newItem.setAvailable(item.getAvailable());
+        Item itemSaved = itemStorage.save(newItem);
         log.info("Added item: id = {}, owner = {}.", itemSaved.getId(), itemSaved.getOwner().getId());
-        return itemStorage.save(item);
+        return itemStorage.save(newItem);
     }
 
     /**

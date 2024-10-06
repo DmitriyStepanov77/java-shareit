@@ -34,7 +34,7 @@ public class ItemController {
      * @return DTO объект, содержащий данные о созданной вещи.
      */
     @PostMapping
-    public ItemDto addItem(@RequestHeader("X-Sharer-User-Id") int userId, @Valid @RequestBody Item item) {
+    public ItemDto addItem(@RequestHeader("X-Sharer-User-Id") int userId, @Valid @RequestBody ItemDto item) {
         return ItemDtoMapper.mapToItemDto(itemService.addItem(userId, item));
     }
 

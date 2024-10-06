@@ -17,9 +17,9 @@ public class ItemDtoMapper {
         itemDto.setName(item.getName());
         itemDto.setOwner(item.getOwner().getId());
         if (item.getRequest() != null)
-            itemDto.setRequest(item.getRequest().getId());
+            itemDto.setRequestId(item.getRequest().getId());
         else
-            itemDto.setRequest(0);
+            itemDto.setRequestId(0);
         return itemDto;
     }
 
@@ -33,9 +33,9 @@ public class ItemDtoMapper {
         itemDto.setName(item.getName());
         itemDto.setOwner(item.getOwner().getId());
         if (item.getRequest() != null)
-            itemDto.setRequest(item.getRequest().getId());
+            itemDto.setRequestId(item.getRequest().getId());
         else
-            itemDto.setRequest(0);
+            itemDto.setRequestId(0);
         itemDto.setLastBooking(bookingLastTime);
         itemDto.setNextBooking(bookingNextTime);
         itemDto.setComments(comments);
