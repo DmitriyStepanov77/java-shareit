@@ -10,6 +10,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.context.TestPropertySource;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.storage.BookingJpaRepository;
+import ru.practicum.shareit.exception.model.NotFoundException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemDtoOut;
@@ -19,6 +20,9 @@ import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.item.service.ItemServiceImp;
 import ru.practicum.shareit.item.storage.CommentJpaRepository;
 import ru.practicum.shareit.item.storage.ItemJpaRepository;
+import ru.practicum.shareit.request.model.ItemRequest;
+import ru.practicum.shareit.request.service.ItemRequestServiceImpl;
+import ru.practicum.shareit.request.storage.ItemRequestJpaRepository;
 import ru.practicum.shareit.user.model.User;
 import ru.practicum.shareit.user.service.UserServiceImp;
 
@@ -27,6 +31,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -37,6 +42,9 @@ public class ItemServiceTest {
     @InjectMocks
     private ItemServiceImp itemService;
 
+    @InjectMocks
+    private ItemRequestServiceImpl itemRequestService;
+
     @Mock
     private ItemJpaRepository itemStorage;
 
@@ -45,6 +53,9 @@ public class ItemServiceTest {
 
     @Mock
     private BookingJpaRepository bookingStorage;
+
+    @Mock
+    private ItemRequestJpaRepository itemRequestStorage;
 
     @Mock
     private CommentJpaRepository commentStorage;
@@ -62,6 +73,8 @@ public class ItemServiceTest {
     private ItemDto itemDto;
 
     private ItemDtoOut itemDtoOut;
+
+    private ItemRequest itemRequest;
 
     @BeforeEach
     void setup() {
@@ -86,6 +99,12 @@ public class ItemServiceTest {
         item2.setName("Item 2");
         item2.setAvailable(true);
         item2.setOwner(user);
+
+        itemRequest = new ItemRequest();
+        itemRequest.setId(1);
+        itemRequest.setItems(List.of(item1));
+        itemRequest.setRequester(user);
+        itemRequest.setDescription("Give me item");
 
         booking = new Booking();
         booking.setId(1);
@@ -179,6 +198,35 @@ public class ItemServiceTest {
         Mockito.verify(itemStorage).save(any());
 
         assertEquals(item2.getName(), itemGet.getName());
+
+        verify(itemStorage, times(1)).save(any());
+    }
+
+    @Test
+    void updateItemFailOwnerTest() {
+        assertThrows(NotFoundException.class, () -> itemService.updateItem(3, 1, item2));
+    }
+
+    @Test
+    void updateItemWithNullFieldsTest() {
+        Mockito
+                .when(itemStorage.save(any()))
+                .thenReturn(item1);
+        Mockito
+                .when(userService.getUser(anyInt()))
+                .thenReturn(user);
+        Mockito
+                .when(itemStorage.findById(any()))
+                .thenReturn(Optional.ofNullable(item1));
+
+        item2.setName(null);
+        item2.setDescription(null);
+        item2.setAvailable(null);
+
+        Item itemGet = itemService.updateItem(1, 1, item2);
+        Mockito.verify(itemStorage).save(any());
+
+        assertEquals(item2.getId(), itemGet.getId());
 
         verify(itemStorage, times(1)).save(any());
     }

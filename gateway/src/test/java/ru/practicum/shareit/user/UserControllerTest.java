@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,8 +10,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.web.servlet.MockMvc;
-import ru.practicum.shareit.user.UserClient;
-import ru.practicum.shareit.user.UserController;
 import ru.practicum.shareit.user.dto.UserDto;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -60,6 +58,21 @@ public class UserControllerTest {
         assertEquals(userJson, content);
 
         verify(userClient).add(any());
+    }
+
+    @Test
+    void addFailTest() throws Exception {
+        userDto.setEmail(null);
+        String userJson = objectMapper.writeValueAsString(userDto);
+        ResponseEntity<Object> response = new ResponseEntity<>(userJson, HttpStatus.OK);
+
+        when(userClient.add(any())).thenReturn(response);
+
+        mockMvc.perform(post("/users")
+                        .content(objectMapper.writeValueAsString(userDto))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest());
     }
 
     @Test

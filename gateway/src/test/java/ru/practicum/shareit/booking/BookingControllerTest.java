@@ -1,4 +1,4 @@
-package ru.practicum.shareit;
+package ru.practicum.shareit.booking;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -94,5 +94,14 @@ public class BookingControllerTest {
                 .andExpect(status().isOk());
 
         verify(bookingClient).getByOwner(1, "ALL");
+    }
+
+    @Test
+    void getByUserTest() throws Exception {
+        mockMvc.perform(get("/bookings")
+                        .header("X-Sharer-User-Id", 1))
+                .andExpect(status().isOk());
+
+        verify(bookingClient).getByUser(1, "ALL");
     }
 }

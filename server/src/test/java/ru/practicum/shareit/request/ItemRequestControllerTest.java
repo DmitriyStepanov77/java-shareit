@@ -59,9 +59,11 @@ public class ItemRequestControllerTest {
         item.setName("Item 1");
         item.setAvailable(true);
         item.setOwner(user);
+        item.setRequest(itemRequest);
 
         itemRequest = new ItemRequest();
         itemRequest.setId(1);
+        itemRequest.setItems(List.of(item));
         itemRequest.setRequester(user);
         itemRequest.setCreated(currentTime);
         itemRequest.setDescription("Give me item");
