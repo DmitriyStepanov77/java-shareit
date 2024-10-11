@@ -110,17 +110,18 @@ public class BookingServiceImp implements BookingService {
     @Override
     public List<Booking> getBookingsByUser(int bookerId, String state) {
         userService.getUser(bookerId);
+        String a = BookingState.ALL.toString();
         LocalDateTime currentTime = LocalDateTime.now();
-        return switch (state) {
-            case "ALL" -> bookingStorage.findByBookerIdOrderByStartDesc(bookerId);
-            case "CURRENT" -> bookingStorage.findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(bookerId,
+        return switch (BookingState.convert(state)) {
+            case BookingState.ALL -> bookingStorage.findByBookerIdOrderByStartDesc(bookerId);
+            case BookingState.CURRENT -> bookingStorage.findByBookerIdAndStartBeforeAndEndAfterOrderByStartDesc(bookerId,
                     currentTime,
                     currentTime);
-            case "PAST" -> bookingStorage.findByBookerIdAndEndBeforeOrderByStartDesc(bookerId, currentTime);
-            case "FUTURE" -> bookingStorage.findByBookerIdAndStartAfterOrderByStartDesc(bookerId, currentTime);
-            case "WAITING" -> bookingStorage.findByBookerIdAndStatusLikeOrderByStartDesc(bookerId,
+            case BookingState.PAST -> bookingStorage.findByBookerIdAndEndBeforeOrderByStartDesc(bookerId, currentTime);
+            case BookingState.FUTURE -> bookingStorage.findByBookerIdAndStartAfterOrderByStartDesc(bookerId, currentTime);
+            case BookingState.WAITING -> bookingStorage.findByBookerIdAndStatusLikeOrderByStartDesc(bookerId,
                     BookingStatus.WAITING);
-            case "REJECTED" -> bookingStorage.findByBookerIdAndStatusLikeOrderByStartDesc(bookerId,
+            case BookingState.REJECTED -> bookingStorage.findByBookerIdAndStatusLikeOrderByStartDesc(bookerId,
                     BookingStatus.REJECTED);
             default -> throw new NotFoundException("Error: state is not valid.");
         };
@@ -138,13 +139,13 @@ public class BookingServiceImp implements BookingService {
     public List<Booking> getBookingsByOwner(int ownerId, String state) {
         userService.getUser(ownerId);
         LocalDateTime currentTime = LocalDateTime.now();
-        return switch (state) {
-            case "ALL" -> bookingStorage.findByOwnerIdAll(ownerId);
-            case "CURRENT" -> bookingStorage.findByOwnerIdCurrent(ownerId, currentTime);
-            case "PAST" -> bookingStorage.findByOwnerIdPast(ownerId, currentTime);
-            case "FUTURE" -> bookingStorage.findByOwnerIdFuture(ownerId, currentTime);
-            case "WAITING" -> bookingStorage.findByOwnerIdStatus(ownerId, BookingStatus.WAITING);
-            case "REJECTED" -> bookingStorage.findByOwnerIdStatus(ownerId, BookingStatus.REJECTED);
+        return switch (BookingState.convert(state)) {
+            case BookingState.ALL -> bookingStorage.findByOwnerIdAll(ownerId);
+            case BookingState.CURRENT -> bookingStorage.findByOwnerIdCurrent(ownerId, currentTime);
+            case BookingState.PAST -> bookingStorage.findByOwnerIdPast(ownerId, currentTime);
+            case BookingState.FUTURE -> bookingStorage.findByOwnerIdFuture(ownerId, currentTime);
+            case BookingState.WAITING -> bookingStorage.findByOwnerIdStatus(ownerId, BookingStatus.WAITING);
+            case BookingState.REJECTED -> bookingStorage.findByOwnerIdStatus(ownerId, BookingStatus.REJECTED);
             default -> throw new NotFoundException("Error: state is not valid.");
         };
     }

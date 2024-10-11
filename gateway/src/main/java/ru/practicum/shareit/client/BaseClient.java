@@ -3,6 +3,7 @@ package ru.practicum.shareit.client;
 import java.util.List;
 import java.util.Map;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -12,6 +13,7 @@ import org.springframework.lang.Nullable;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestTemplate;
 
+@Slf4j
 public class BaseClient {
     protected final RestTemplate rest;
 
@@ -78,6 +80,7 @@ public class BaseClient {
                 shareitServerResponse = rest.exchange(path, method, requestEntity, Object.class);
             }
         } catch (HttpStatusCodeException e) {
+            log.error("Server request error: status code = {}", e.getStatusCode());
             return ResponseEntity.status(e.getStatusCode()).body(e.getResponseBodyAsByteArray());
         }
         return prepareGatewayResponse(shareitServerResponse);

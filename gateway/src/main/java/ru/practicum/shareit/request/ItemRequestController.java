@@ -22,16 +22,19 @@ public class ItemRequestController {
     @PostMapping
     public ResponseEntity<Object> addItemRequest(@RequestHeader("X-Sharer-User-Id") @Positive int userId,
                                                  @Valid @RequestBody ItemRequestDto itemRequestDto) {
+        log.info("Request to add item request by user = {}.", userId);
         return itemRequestClient.add(itemRequestDto, userId);
     }
 
     @GetMapping("/{requestId}")
     public ResponseEntity<Object> getItemRequest(@PathVariable @Positive int requestId) {
+        log.info("Request to get item request  = {}.", requestId);
         return itemRequestClient.get(requestId);
     }
 
     @GetMapping()
     public ResponseEntity<Object> getByRequester(@RequestHeader("X-Sharer-User-Id") @Positive int userId) {
+        log.info("Request to get item requests by requester  = {}.", userId);
         return itemRequestClient.getByRequester(userId);
     }
 

@@ -24,22 +24,26 @@ public class UserController {
     @PostMapping
     public ResponseEntity<Object> addUser(@RequestBody @Valid UserDto userDto) {
         validationUser(userDto);
+        log.info("Request to add user with name = {}.", userDto.getName());
         return userClient.add(userDto);
     }
 
     @PatchMapping("/{userId}")
     public ResponseEntity<Object> updateUser(@PathVariable @Positive int userId,
                                              @RequestBody @Valid UserDto userDto) {
+        log.info("Request to update user = {}.", userId);
         return userClient.update(userDto, userId);
     }
 
     @GetMapping("/{userId}")
     public ResponseEntity<Object> getUser(@PathVariable @Positive int userId) {
+        log.info("Request to get user = {}.", userId);
         return userClient.get(userId);
     }
 
     @DeleteMapping("/{userId}")
     public ResponseEntity<Object> deleteUser(@PathVariable @Positive int userId) {
+        log.info("Request to delete user = {}.", userId);
         return userClient.delete(userId);
     }
 
